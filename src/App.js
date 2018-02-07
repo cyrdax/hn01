@@ -20,14 +20,6 @@ const list = [
   },
 ];
 
-/*function isSearched(searchTerm) {
-  return function(item) {
-    // some condition which returns true or false
-    //return item.title.toLowerCase().includes(searchTerm.toLowerCase());
-    return !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
-  }
-}*/
-
 const isSearched = (searchTerm) => (item) =>
   !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
