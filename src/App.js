@@ -30,7 +30,7 @@ class App extends Component {
 
     this.state = {
       list,
-      header: 'CyrdaxNotes',
+      header: 'NotesStack',
       searchTerm: '',
     };
 
