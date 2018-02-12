@@ -2,14 +2,13 @@ import React, { Component } from 'react';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
+const DEFAULT_HPP = '5';
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
-
-
-const isSearched = (searchTerm) => (item) =>
-  !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
+const PARAM_PAGE = 'page=';
+const PARAM_HPP = 'hitsPerPage=';
 
 class App extends Component {
 
@@ -17,12 +16,13 @@ class App extends Component {
     super(props);
 
     this.state = {
-      header: 'CyrdaxNotes',
+      header: 'haxxNotes',
       searchTerm: DEFAULT_QUERY,
       result: null,
     };
 
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
 
     this.setSearchTopstories = this.setSearchTopstories.bind(this);
@@ -31,6 +31,12 @@ class App extends Component {
 
   onSearchChange(event) {
     this.setState({ searchTerm: event.target.value });
+  }
+
+  onSearchSubmit(event) {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopstories(searchTerm);
+    event.preventDefault();
   }
 
   onDismiss(id) {
@@ -42,11 +48,25 @@ class App extends Component {
   }
 
   setSearchTopstories(result) {
-    this.setState({ result });
+    const { hits, page } = result;
+
+    const oldHits = page !== 0
+      ? this.state.result.hits
+      : [];
+
+    const updatedHits = [
+      ...oldHits,
+      ...hits
+    ];
+
+    this.setState({
+      result: { hits: updatedHits, page }
+    });
+    console.log(this.state);
   }
 
-  fetchSearchTopstories(searchTerm) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+  fetchSearchTopstories(searchTerm, page = 0) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
       .then(response => response.json())
       .then(result => this.setSearchTopstories(result))
       .catch(e => e);
@@ -59,6 +79,7 @@ class App extends Component {
 
   render() {
     const { searchTerm, result } = this.state;
+    const page = (result && result.page) || 0;
 
     return (
       <div className="page">
@@ -67,6 +88,7 @@ class App extends Component {
           <Search
             value={searchTerm}
             onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
           >
             Search
           </Search>
@@ -74,22 +96,34 @@ class App extends Component {
         { result &&
           <Table
             list={result.hits}
-            pattern={searchTerm}
             onDismiss={this.onDismiss}
           />
         }
+        <div className="interactions">
+          <Button onClick={() => this.fetchSearchTopstories(searchTerm, page + 1)}>
+            More
+          </Button>
+        </div>
       </div>
     );
   }
 }
 
-const Search = ({ value, onChange, children }) =>
-  <form>
-    {children} <input
+const Search = ({
+  value,
+  onChange,
+  onSubmit,
+  children
+}) =>
+  <form onSubmit={onSubmit}>
+    <input
       type="text"
       value={value}
       onChange={onChange}
     />
+    <button type="submit">
+      {children}
+    </button>
   </form>
 
 const largeColumn = {
@@ -104,10 +138,10 @@ const smallColumn = {
   width: '10%',
 };
 
-const Table = ({list, pattern, onDismiss }) => {
+const Table = ({list, onDismiss }) => {
   return (
     <div>
-      {list.filter(isSearched(pattern)).map(item =>
+      {list.map(item =>
         <div key={item.objectID} className="table-row">
           <span style={largeColumn}>
             <a href={item.url}>{item.title}</a>
