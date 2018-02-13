@@ -55,7 +55,6 @@ class App extends Component {
     }
 
     event.preventDefault();
-    //console.log(this.state);
   }
 
   onDismiss(id) {
@@ -92,7 +91,6 @@ class App extends Component {
         [searchKey]: { hits: updatedHits, page }
       }
     });
-    //console.log(this.state);
   }
 
   fetchSearchTopstories(searchTerm, page = 0) {
